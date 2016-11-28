@@ -49,7 +49,7 @@ class ESNodesCheck(NagiosCheck):
                          "reporting as '%s' but we expected '%s'"
                          % (active_cluster_nodes, nodes_in_cluster))
         else:
-            raise Status('OK', "Number of nodes in the cluster is '%s'"    
+            raise Status('OK', "Number of nodes in the cluster is '%s' "
                          "which is >= %s as expected" % (active_cluster_nodes, nodes_in_cluster))
 
 if __name__ == "__main__":
