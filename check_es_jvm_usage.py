@@ -11,6 +11,8 @@ except ImportError:
 
 
 class ESJVMHealthCheck(NagiosCheck):
+    default_critical_threshold = 85
+    default_warning_threshold = 75
 
     def __init__(self):
 
@@ -20,16 +22,20 @@ class ESJVMHealthCheck(NagiosCheck):
         self.add_option('P', 'port', 'port', 'The ES port - defaults to 9200')
         self.add_option('C', 'critical_threshold', 'critical_threshold',
                         'The level at which we throw a CRITICAL alert'
-                        ' - defaults to 97% of the JVM setting')
+                        ' - defaults to '
+                        + str(ESJVMHealthCheck.default_critical_threshold)
+                        +'% of the JVM setting')
         self.add_option('W', 'warning_threshold', 'warning_threshold',
                         'The level at which we throw a WARNING alert'
-                        ' - defaults to 90% of the JVM setting')
+                        ' - defaults to '
+                        + str(ESJVMHealthCheck.default_warning_threshold)
+                        +'% of the JVM setting')
 
     def check(self, opts, args):
         host = opts.host
         port = int(opts.port or '9200')
-        critical = int(opts.critical_threshold or '97')
-        warning = int(opts.warning_threshold or '90')
+        critical = int(opts.critical_threshold or ESJVMHealthCheck.default_critical_threshold)
+        warning = int(opts.warning_threshold or ESJVMHealthCheck.default_warning_threshold)
 
         try:
             response = urllib2.urlopen(r'http://%s:%d/_nodes/stats/jvm'
@@ -85,7 +91,8 @@ class ESJVMHealthCheck(NagiosCheck):
                             str("\r\n".join(warning_details))))
         else:
             raise Status("OK", "All nodes in the cluster are currently below "
-                         "the % JVM mem warning threshold")
+                         "the %s%% JVM mem warning threshold"
+                         % (ESJVMHealthCheck.default_warning_threshold))
 
 if __name__ == "__main__":
     ESJVMHealthCheck().run()
