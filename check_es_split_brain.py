@@ -8,7 +8,7 @@ try:
     import json
 except ImportError:
     import simplejson as json
-
+from the_connection import make_es_connection
 
 class ESSplitBrainCheck(NagiosCheck):
 
@@ -18,19 +18,26 @@ class ESSplitBrainCheck(NagiosCheck):
 
         self.add_option('N', 'nodes', 'nodes', 'Cluster nodes')
         self.add_option('P', 'port', 'port', 'The ES port - defaults to 9200')
+        self.add_option('H', 'host', 'host', 'The cluster to check')
+        self.add_option('S', 'usessl', 'usessl', 'SSL connection - defaults to True')
+        self.add_option('U', 'httpuser', 'httpuser', 'httpuser - defaults to nothing')
+        self.add_option('X', 'httppass', 'httppass', 'httppass - defaults to nothing')
 
     def check(self, opts, args):
+        host = opts.host
         nodes = opts.nodes.split(",")
         port = int(opts.port or '9200')
         masters = []
         responding_nodes = []
         failed_nodes = []
+        usessl = opts.usessl or True
+        httpuser = opts.httpuser or False
+        httppass = opts.httppass or False
+        endpoint = "_cluster/state/nodes,master_node/"
 
         for node in nodes:
             try:
-                response = urllib2.urlopen(
-                        r'http://%s:%d/_cluster/state/nodes,master_node/'
-                        % (node, port))
+                response = make_es_connection(usessl, host, port, httpuser, httppass, endpoint)
                 response_body = response.read()
                 response = json.loads(response_body)
             except (urllib2.HTTPError, urllib2.URLError), e:
